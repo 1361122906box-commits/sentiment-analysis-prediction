@@ -1,0 +1,44 @@
+# Python environments and generated caches
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Local editor, OS and backup files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+/backup/
+*.log
+*.zip
+
+# Credentials and local configuration
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Local datasets and generated comment-level results
+/数据源/
+/清洗后的数据源/
+/训练集/
+/output/
+/可交互的可视化大屏/*.json
+
+# Model weights (prepare locally; not included in the public repository)
+/finetuned_models/
+*.safetensors
+*.bin
+*.h5
+*.msgpack
+*.pt
+*.pth
+
+# Historical generated figures
+/other/**/*.png
+/other/**/*.pdf

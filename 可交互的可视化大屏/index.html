@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>舆情监控分析大屏</title>
+    <script src="https://cdn.bootcdn.net/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/echarts-wordcloud/2.0.0/echarts-wordcloud.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: "Microsoft YaHei", sans-serif;
+            background: linear-gradient(135deg, #0f1c30 0%, #1a2b45 100%);
+            color: #fff;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .dashboard-title {
+            text-align: center;
+            font-size: 28px;
+            margin-bottom: 10px;
+            color: #00d4ff;
+        }
+
+        .dashboard-subtitle {
+            text-align: center;
+            color: #a0aec0;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: 300px 1fr 1fr;
+            grid-template-rows: auto auto auto;
+            grid-gap: 15px;
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+
+        .grid-item {
+            background: rgba(26, 43, 69, 0.9);
+            border-radius: 8px;
+            padding: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .chart-title {
+            font-size: 16px;
+            margin-bottom: 12px;
+            color: #63e6ff;
+            border-left: 3px solid #00d4ff;
+            padding-left: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chart-container {
+            width: 100%;
+            height: 300px;
+        }
+
+        .event-list-container {
+            grid-row: 1 / span 3;
+        }
+
+        .sentiment-chart-container {
+            grid-column: 2;
+            grid-row: 1;
+        }
+
+        .trend-chart-container {
+            grid-column: 3;
+            grid-row: 1;
+        }
+
+        .wordcloud-container {
+            grid-column: 2;
+            grid-row: 2;
+        }
+
+        .predictions-container {
+            grid-column: 3;
+            grid-row: 2;
+        }
+
+        .comments-container {
+            grid-column: 2 / span 2;
+            grid-row: 3;
+        }
+
+        .event-list {
+            list-style: none;
+            height: 500px;
+            overflow-y: auto;
+        }
+
+        .event-item {
+            padding: 10px;
+            margin-bottom: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+        }
+
+        .event-item:hover {
+            background: rgba(0, 212, 255, 0.1);
+            border-left-color: #00d4ff;
+        }
+
+        .event-item.active {
+            background: rgba(0, 212, 255, 0.2);
+            border-left-color: #00d4ff;
+        }
+
+        .event-name {
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 5px;
+            color: #fff;
+        }
+
+        .event-stats {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        .sentiment-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 11px;
+        }
+
+        .positive { background: rgba(72, 187, 120, 0.2); color: #48bb78; }
+        .negative { background: rgba(245, 101, 101, 0.2); color: #f56565; }
+        .neutral { background: rgba(160, 174, 192, 0.2); color: #a0aec0; }
+
+        .comments-list {
+            height: 250px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .comment-item {
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            border-left: 3px solid;
+            font-size: 12px;
+        }
+
+        .comment-positive { border-left-color: #48bb78; }
+        .comment-negative { border-left-color: #f56565; }
+        .comment-neutral { border-left-color: #faad14; }
+
+        .comment-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 4px;
+            font-size: 11px;
+            color: #a0aec0;
+        }
+
+        .sentiment-tag {
+            font-weight: bold;
+        }
+
+        .positive-tag { color: #48bb78; }
+        .negative-tag { color: #f56565; }
+        .neutral-tag { color: #faad14; }
+
+        .summary-box {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 10px;
+            font-size: 12px;
+        }
+
+        .summary-title {
+            color: #63e6ff;
+            margin-bottom: 5px;
+        }
+
+        .summary-text {
+            color: #e2e8f0;
+            line-height: 1.4;
+        }
+
+        .time-filter {
+            font-size: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .time-filter:hover {
+            background: rgba(0, 212, 255, 0.2);
+        }
+
+        ::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #00d4ff;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-title">📊 舆情智能监控分析大屏</div>
+    <div class="dashboard-subtitle">实时情感分析 · 多维度可视化 · 智能预警</div>
+
+    <div class="grid-container">
+        <!-- 左侧：事件列表 -->
+        <div class="grid-item event-list-container">
+            <div class="chart-title">📋 舆情事件列表</div>
+            <ul class="event-list" id="eventList">
+                <!-- 事件列表动态生成 -->
+            </ul>
+        </div>
+
+        <!-- 中间上方：情感分布 -->
+        <div class="grid-item sentiment-chart-container">
+            <div class="chart-title">📊 情感分布统计</div>
+            <div class="chart-container" id="sentimentChart"></div>
+        </div>
+
+        <!-- 右侧上方：情感趋势 -->
+        <div class="grid-item trend-chart-container">
+            <div class="chart-title">
+                📈 情感趋势分析
+                <span class="time-filter" id="timeFilter">24H</span>
+            </div>
+            <div class="chart-container" id="trendChart"></div>
+        </div>
+
+        <!-- 中间下方：词云 -->
+        <div class="grid-item wordcloud-container">
+            <div class="chart-title">☁️ 热点词云分析</div>
+            <div class="chart-container" id="wordCloudChart"></div>
+        </div>
+
+        <!-- 右侧下方：预测趋势 -->
+        <div class="grid-item predictions-container">
+            <div class="chart-title">🔮 情感趋势预测</div>
+            <div class="chart-container" id="predictionsChart"></div>
+        </div>
+
+        <!-- 底部：评论列表 -->
+        <div class="grid-item comments-container">
+            <div class="chart-title">💬 实时评论分析</div>
+            <div class="comments-list" id="commentsList">
+                <!-- 评论动态生成 -->
+            </div>
+            <div class="summary-box">
+                <div class="summary-title">📝 舆情总结</div>
+                <div class="summary-text" id="summaryText"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="dashboard.js"></script>
+</body>
+</html>

@@ -5,7 +5,7 @@ let wordCloudChart = echarts.init(document.getElementById('wordCloudChart'));
 let predictionsChart = echarts.init(document.getElementById('predictionsChart'));
 
 // 事件数据 - 根据你的文件列表
-const events = [
+let events = [
     {
         id: 'event1',
         name: 'A股半日成交1.25万亿缩量711亿',
@@ -44,6 +44,10 @@ const events = [
     }
 ];
 
+function escapeHtml(value) {
+    return String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
 // 当前选中的事件
 let currentEvent = null;
 let currentVisualData = null;
@@ -51,8 +55,21 @@ let currentResultData = null;
 
 // 初始化页面
 async function initDashboard() {
-    // 加载事件列表
-    loadEventList();
+    try {
+        const response = await fetch('events.json');
+        if (response.ok) {
+            const manifest = await response.json();
+            if (!Array.isArray(manifest.events) || !manifest.events.length) throw new Error('事件清单为空');
+            events = manifest.events;
+            document.querySelector('.dashboard-subtitle').textContent = manifest.notice || '离线数据分析';
+        } else if (response.status !== 404) {
+            throw new Error(`事件清单加载失败: ${response.status}`);
+        }
+        loadEventList();
+    } catch (error) {
+        document.querySelector('.dashboard-subtitle').textContent = error.message;
+        return;
+    }
 
     // 默认加载第一个事件
     if (events.length > 0) {
@@ -71,7 +88,7 @@ function loadEventList() {
         if (index === 0) li.classList.add('active');
 
         li.innerHTML = `
-            <div class="event-name">${event.name}</div>
+            <div class="event-name">${escapeHtml(event.name)}</div>
             <div class="event-stats">
                 <span class="sentiment-badge positive">积极 0%</span>
                 <span class="sentiment-badge negative">消极 0%</span>
@@ -101,10 +118,12 @@ async function loadEventData(event) {
     try {
         // 加载可视化数据
         const visualResponse = await fetch(event.visualFile);
+        if (!visualResponse.ok) throw new Error(`数据文件加载失败: ${event.visualFile}`);
         currentVisualData = await visualResponse.json();
 
         // 加载情感分析结果数据
         const resultResponse = await fetch(event.resultFile);
+        if (!resultResponse.ok) throw new Error(`数据文件加载失败: ${event.resultFile}`);
         currentResultData = await resultResponse.json();
 
         // 更新所有图表和数据
@@ -112,7 +131,7 @@ async function loadEventData(event) {
 
     } catch (error) {
         console.error('加载数据失败:', error);
-        alert('数据加载失败，请检查文件路径和格式');
+        document.getElementById('summaryText').textContent = error.message;
     }
 }
 
@@ -189,7 +208,7 @@ function updateTrendChart() {
         const timeStr = item.time;
         // 提取小时部分
         const match = timeStr.match(/\d{2}:\d{2}/);
-        return match ? match[0] : timeStr.split(' ')[1];
+        return timeStr; // 保留日期，避免跨日数据时间混淆
     });
 
     const scores = timeSeries.map(item => item.sentiment_score);
@@ -367,7 +386,7 @@ function updatePredictionsChart() {
     const times = predictions.map(item => {
         const timeStr = item.time;
         const match = timeStr.match(/\d{2}:\d{2}/);
-        return match ? match[0] : timeStr.split(' ')[1];
+        return timeStr; // 保留日期，避免跨日数据时间混淆
     });
 
     const scores = predictions.map(item => item.sentiment_score);
@@ -470,7 +489,7 @@ function updateCommentsList() {
 
         // 格式化时间
         const timestamp = comment.timestamp;
-        const displayTime = timestamp ? timestamp.split(' ')[1] : '未知时间';
+        const displayTime = timestamp || '未知时间';
 
         // 截断过长的评论
         const content = comment.comment.length > 100
@@ -480,10 +499,10 @@ function updateCommentsList() {
         div.className = `comment-item ${sentimentClass}`;
         div.innerHTML = `
             <div class="comment-header">
-                <span class="sentiment-tag ${sentimentTagClass}">${sentiment}</span>
-                <span class="comment-time">${displayTime}</span>
+                <span class="sentiment-tag ${sentimentTagClass}">${escapeHtml(sentiment)}</span>
+                <span class="comment-time">${escapeHtml(displayTime)}</span>
             </div>
-            <div class="comment-content">${content}</div>
+            <div class="comment-content">${escapeHtml(content)}</div>
         `;
 
         commentsList.appendChild(div);
@@ -497,10 +516,10 @@ function updateSummary() {
     if (currentVisualData.event_info) {
         const info = currentVisualData.event_info;
         summaryText.innerHTML = `
-            <strong>${info.name}</strong><br/>
-            分析时间: ${info.analysis_time}<br/>
+            <strong>${escapeHtml(info.name)}</strong><br/>
+            分析时间: ${escapeHtml(info.analysis_time)}<br/>
             总评论数: ${info.total_comments}条<br/>
-            情感总结: ${info.sentiment_summary}<br/>
+            情感总结: ${escapeHtml(info.sentiment_summary)}<br/>
             积极比例: ${info.positive_percentage}% | 
             消极比例: ${info.negative_percentage}% | 
             中性比例: ${info.neutral_percentage}%
@@ -529,18 +548,6 @@ function updateEventListStats() {
         }
     });
 }
-
-// 时间过滤器点击事件
-document.getElementById('timeFilter').addEventListener('click', function() {
-    const current = this.textContent;
-    const options = ['24H', '7D', '30D', '全部'];
-    const currentIndex = options.indexOf(current);
-    const nextIndex = (currentIndex + 1) % options.length;
-    this.textContent = options[nextIndex];
-
-    // 这里可以添加根据时间范围过滤数据的逻辑
-    console.log('切换时间范围:', options[nextIndex]);
-});
 
 // 窗口大小变化时重绘图表
 window.addEventListener('resize', function() {

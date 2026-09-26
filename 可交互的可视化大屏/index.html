@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>舆情监控分析大屏</title>
-    <script src="https://cdn.bootcdn.net/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
-    <script src="https://cdn.bootcdn.net/ajax/libs/echarts-wordcloud/2.0.0/echarts-wordcloud.min.js"></script>
+    <script src="vendor/echarts.min.js"></script>
+    <script src="vendor/echarts-wordcloud.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -226,7 +226,7 @@
 </head>
 <body>
     <div class="dashboard-title">📊 舆情智能监控分析大屏</div>
-    <div class="dashboard-subtitle">实时情感分析 · 多维度可视化 · 智能预警</div>
+    <div class="dashboard-subtitle">离线情感分析 · 多维度可视化 · 趋势探索</div>
 
     <div class="grid-container">
         <!-- 左侧：事件列表 -->
@@ -247,7 +247,7 @@
         <div class="grid-item trend-chart-container">
             <div class="chart-title">
                 📈 情感趋势分析
-                <span class="time-filter" id="timeFilter">24H</span>
+                <span class="time-filter" id="timeFilter">全部</span>
             </div>
             <div class="chart-container" id="trendChart"></div>
         </div>
@@ -266,7 +266,7 @@
 
         <!-- 底部：评论列表 -->
         <div class="grid-item comments-container">
-            <div class="chart-title">💬 实时评论分析</div>
+            <div class="chart-title">💬 评论分析</div>
             <div class="comments-list" id="commentsList">
                 <!-- 评论动态生成 -->
             </div>

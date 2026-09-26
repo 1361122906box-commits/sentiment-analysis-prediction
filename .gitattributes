@@ -1,0 +1,10 @@
+* text=auto
+*.py text eol=lf
+*.md text eol=lf
+*.csv text eol=lf
+*.yml text eol=lf
+*.json text eol=lf
+*.js text eol=lf
+*.html text eol=lf
+# Preserve downloaded assets byte-for-byte so source hashes stay valid on clone.
+*.min.js -text -diff

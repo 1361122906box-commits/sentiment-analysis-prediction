@@ -1,0 +1,16 @@
+[
+  {
+    "name": "echarts",
+    "version": "5.4.3",
+    "source": "https://registry.npmjs.org/echarts/-/echarts-5.4.3.tgz",
+    "sha256": "1156429a16a38cb8604dcc6518c19406d4226142d908f8edd2e3531443c54d19",
+    "license": "Apache-2.0"
+  },
+  {
+    "name": "echarts-wordcloud",
+    "version": "2.1.0",
+    "source": "https://registry.npmjs.org/echarts-wordcloud/-/echarts-wordcloud-2.1.0.tgz",
+    "sha256": "7b6f0d55971d9de5913120c7ce6342f3551efd00b4a1df8a50f08385bb25f155",
+    "license": "ISC"
+  }
+]

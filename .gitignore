@@ -1,5 +1,8 @@
 # Python environments and generated caches
 .venv/
+.repro-venv/
+/.repro-check/
+/artifacts/
 venv/
 env/
 __pycache__/

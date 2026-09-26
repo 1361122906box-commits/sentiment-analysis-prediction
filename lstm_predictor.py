@@ -104,7 +104,7 @@ class LSTMPredictor:
                 print(f'Epoch [{epoch}/{epochs}], Loss: {loss.item():.6f}')
 
         self.is_trained = True
-        print(f"✅ LSTM模型训练完成，最终损失: {losses[-1]:.6f}")
+        print(f"LSTM模型训练完成，最终损失: {losses[-1]:.6f}")
         return True
 
     def predict(self, time_series_data, future_steps=6, seq_length=12):
@@ -149,7 +149,7 @@ class LSTMPredictor:
             # 确保预测值在合理范围内
             predictions = np.clip(predictions, -1.0, 1.0)
 
-            print(f"✅ LSTM预测完成: {predictions.tolist()}")
+            print(f"LSTM预测完成: {predictions.tolist()}")
             return predictions.tolist()
 
         except Exception as e:
